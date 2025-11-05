@@ -92,10 +92,11 @@
     }
 
     @media (min-width: 720px) {
-      .grid {
-        grid-template-columns: 1.2fr 1fr;
-        gap: 24px;
-      }
+      .grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+    }
+    @media (min-width: 1024px) {
+      .grid { grid-template-columns: 1.2fr 1fr 1.4fr 1fr; gap: 28px; }
+    }
     }
 
     .panel {
@@ -176,19 +177,34 @@
 
       <div class="grid">
         <section class="panel">
-          <div class="kicker">Right now in New York City</div>
+          <div class="kicker">RIGHT NOW</div>
           <div class="temp" id="temp">—</div>
-          <div class="wind" id="wind">—</div>
+          <div class="wind" id="windMain">—</div>
+          <div class="wind" id="windSub"><em>—</em></div>
         </section>
 
         <section class="panel">
-          <div class="kicker">What to Wear</div>
+          <div class="kicker">SEASON</div>
+          <div class="advice" id="season">—</div>
+        </section>
+
+        <section class="panel">
+          <div class="kicker">WHAT TO WEAR</div>
           <div class="advice" id="advice">—</div>
-          <p class="note">Enter additional info</p>
+        </section>
+
+        <section class="panel">
+          <div class="kicker">SUNLIGHT</div>
+          <div class="advice" id="sunlight">—</div>
         </section>
       </div>
 
       <div class="footer">
+        <div>
+          built with data from open-meteo • Units: °F & mph • Timezone: America/New_York
+        </div>
+        <button class="refresh" id="refreshBtn" title="Refresh weather">refresh</button>
+      </div>
         <div>
           Data via Open‑Meteo • Units: °F & mph • Timezone: America/New_York
         </div>
@@ -199,20 +215,25 @@
 
   <script>
     const NYC = { lat: 40.7128, lon: -74.0060 };
-    const API = `https://api.open-meteo.com/v1/forecast?latitude=${NYC.lat}&longitude=${NYC.lon}&current=temperature_2m,wind_speed_10m,wind_gusts_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York`;
+    const API = `https://api.open-meteo.com/v1/forecast?latitude=${NYC.lat}&longitude=${NYC.lon}&current=temperature_2m,wind_speed_10m,wind_gusts_10m&daily=sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York`;
 
     const $temp = document.getElementById('temp');
-    const $wind = document.getElementById('wind');
+    const $windMain = document.getElementById('windMain');
+    const $windSub = document.getElementById('windSub');
     const $advice = document.getElementById('advice');
     const $when = document.getElementById('when');
     const $refresh = document.getElementById('refreshBtn');
+    const $season = document.getElementById('season');
+    const $sunlight = document.getElementById('sunlight');
 
     function formatWhen(date = new Date()) {
       const fmt = new Intl.DateTimeFormat('en-US', {
-        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+        weekday: 'long', month: 'long', day: 'numeric',
         hour: 'numeric', minute: '2-digit', hour12: true,
         timeZone: 'America/New_York'
       });
+      return fmt.format(date);
+    });
       return fmt.format(date);
     }
 
@@ -229,8 +250,19 @@
 
     function wearAdvice(tempF) {
       if (tempF >= 70) {
-        return "Shorts & T‑shirt (ish): Go for the classic shorts and a short‑sleeve jersey. Don't forget your shades and sunscreen!";
+        return "Shorts & T-shirt (ish): Go for the classic shorts and a short-sleeve jersey. Don't forget your shades and sunscreen!";
       } else if (tempF >= 60) {
+        return "Arm/Knee Warmers & Vest: Shorts are still on the menu! Add arm warmers and a light vest for when the breeze hits.";
+      } else if (tempF >= 50) {
+        return "Tights & Long Sleeves: Time to cover those knees! Tights, a long-sleeve top, light gloves, and maybe an ear-covering headband.";
+      } else if (tempF >= 40) {
+        return "bring out the thermal tights, cycling jacket, gloves, socks, a headband, and chapstick";
+      } else if (tempF >= 30) {
+        return "Heavy Armor: Heavy insulated gear, a buff for your face, and beefy mittens. Stay warm out there!";
+      } else {
+        return "Full Insulation: This is serious business. Double layers, a hefty buff, goggles, and heated gear if you have it!";
+      }
+    } else if (tempF >= 60) {
         return "Arm/Knee Warmers & Vest: Shorts are still on the menu! Add arm warmers and a light vest for when the breeze hits.";
       } else if (tempF >= 50) {
         return "Tights & Long Sleeves: Time to cover those knees! Tights, a long‑sleeve top, light gloves, and maybe an ear‑covering headband.";
@@ -243,6 +275,20 @@
       }
     }
 
+    function seasonLabel(date = new Date()) {
+      const m = new Intl.DateTimeFormat('en-US', { month: 'numeric', timeZone: 'America/New_York' }).format(date);
+      const month = parseInt(m, 10);
+      if (month >= 3 && month <= 5) return 'spring 🌱';
+      if (month >= 6 && month <= 8) return 'summer ☀️';
+      if (month >= 9 && month <= 11) return 'actual fall 🍂';
+      return 'winter ❄️';
+    }
+
+    function formatTimeNY(isoStr) {
+      const d = new Date(isoStr);
+      return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }).format(d);
+    }
+
     async function load() {
       try {
         $when.textContent = formatWhen();
@@ -252,27 +298,44 @@
         const t = data?.current?.temperature_2m;
         const ws = data?.current?.wind_speed_10m;
         const wg = data?.current?.wind_gusts_10m;
+        const sunrise = data?.daily?.sunrise?.[0];
+        const sunset = data?.daily?.sunset?.[0];
 
         if (typeof t !== 'number' || typeof ws !== 'number') {
           throw new Error('Missing current weather fields');
         }
 
         const roundedT = Math.round(t);
-        const windText = `${Math.round(ws)} mph` + (typeof wg === 'number' ? ` (gusts ~${Math.round(wg)} mph)` : '');
-        const label = windLabel(ws, t);
-
+        const label = windLabel(ws, t).toLowerCase();
         $temp.textContent = `${roundedT}°F`;
-        $wind.textContent = `Wind: ${label} — ${windText}`;
+        $windMain.textContent = `wind: ${label}`;
+        $windSub.innerHTML = `<em>${Math.round(ws)} mph${typeof wg === 'number' ? ` (gusts  ${Math.round(wg)}mph)` : ''}</em>`;
+
         $advice.textContent = wearAdvice(t);
+        $season.textContent = seasonLabel();
+
+        if (sunrise && sunset) {
+          const nowNY = new Date();
+          const nowNYStr = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(nowNY);
+          const now = new Date(nowNY);
+          const isDark = now < new Date(sunrise) || now > new Date(sunset);
+          $sunlight.textContent = isDark ? "it’s currently dark, you should bring a light" : "it’s daylight right now";
+        } else {
+          $sunlight.textContent = '—';
+        }
       } catch (err) {
         console.error(err);
         $temp.textContent = '—';
-        $wind.textContent = 'Aww snap, could not load weather. Try Refresh.';
+        $windMain.textContent = 'wind: —';
+        $windSub.innerHTML = '<em>—</em>';
         $advice.textContent = '—';
+        $season.textContent = '—';
+        $sunlight.textContent = '—';
       }
     }
 
     $refresh.addEventListener('click', load);
+    load();('click', load);
     load();
   </script>
 </body>
