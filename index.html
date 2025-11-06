@@ -33,6 +33,10 @@
       --card: #ffffffcc;
       --radius: 18px;
       --shadow: 0 6px 20px rgba(0,0,0,0.05);
+      /* chips */
+      --chip-bg: rgba(255,255,255,.70);
+      --chip-border: var(--line);
+      --chip-text: var(--ink-700);
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -40,10 +44,15 @@
         --ink-900: rgba(255,255,255,.88);
         --ink-700: rgba(255,255,255,.72);
         --ink-500: rgba(255,255,255,.56);
-        --line: rgba(255,255,255,.08);
+        --line: rgba(255,255,255,.10);
         --card: rgba(255,255,255,.06);
         --shadow: 0 10px 28px rgba(0,0,0,.45);
+        /* chips */
+        --chip-bg: rgba(255,255,255,.10);
+        --chip-border: rgba(255,255,255,.16);
+        --chip-text: rgba(255,255,255,.85);
       }
+    }
     }
 
     html, body { height: 100%; }
@@ -98,6 +107,12 @@
     .kicker { font-size: 12px; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.12em; font-variant-caps: all-small-caps; margin-bottom: 8px; }
     .temp { font-size: clamp(48px, 10vw, 96px); line-height: 0.95; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
     .wind { font-size: 18px; color: var(--ink-900); margin: 6px 0 0; }
+    /* Feels-like chip */
+    #feelslike { margin-top: 10px; }
+    .feels { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border:1px solid var(--chip-border); border-radius:999px; font-size:13px; color: var(--chip-text); background: var(--chip-bg); -webkit-backdrop-filter: saturate(120%) blur(2px); backdrop-filter: saturate(120%) blur(2px); }
+    
+    .feels .icon { width:12px; height:12px; margin-right:2px; }
+    .feels .icon svg { width:12px; height:12px; }
     .advice { font-size: clamp(18px, 2.2vw, 22px); line-height: 1.3; margin: 4px 0 0; }
 
     .footer {
@@ -129,9 +144,13 @@
       --ink-900: rgba(255,255,255,.88);
       --ink-700: rgba(255,255,255,.72);
       --ink-500: rgba(255,255,255,.56);
-      --line: rgba(255,255,255,.08);
+      --line: rgba(255,255,255,.10);
       --card: rgba(255,255,255,.06);
       --shadow: 0 10px 28px rgba(0,0,0,.45);
+      /* chips */
+      --chip-bg: rgba(255,255,255,.10);
+      --chip-border: rgba(255,255,255,.16);
+      --chip-text: rgba(255,255,255,.88);
     }
     html.theme-light {
       --bg: #FAF7F2;
@@ -141,6 +160,10 @@
       --line: rgba(17,24,39,.06);
       --card: #ffffffcc;
       --shadow: 0 6px 20px rgba(0,0,0,0.05);
+      /* chips */
+      --chip-bg: rgba(255,255,255,.70);
+      --chip-border: var(--line);
+      --chip-text: var(--ink-700);
     }
 
     /* Generic toggle template (not used inside cluster) */
@@ -162,6 +185,9 @@
     @media (prefers-color-scheme: dark) {
       .skeleton { background: linear-gradient(90deg, rgba(255,255,255,.06) 25%, rgba(255,255,255,.12) 37%, rgba(255,255,255,.06) 63%); }
     }
+    .cafe a { color: inherit; text-decoration: none; border-bottom: 1px dashed var(--ink-500); }
+    .art a { color: inherit; text-decoration: none; border-bottom: 1px dashed var(--ink-500); }
+    .cafe .rating { color: var(--ink-500); font-size: 13px; margin-left: 6px; }
   </style>
 </head>
 <body>
@@ -184,15 +210,20 @@
           </section>
 
           <section class="panel what">
-            <div class="kicker"><span id="shirtIcon" aria-hidden="true" class="icon"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' fill='currentColor' stroke='none'><path d='M16 3l3 3-4 4v11H9V10L5 6l3-3 4 2 4-2z'/></svg></span>WHAT TO WEAR</div>
+            <div class="kicker"><span id="shirtIcon" aria-hidden="true" class="icon"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' fill='currentColor' stroke='none'><path d='M16 3c1.4 0 2.7.6 3.6 1.6L21 6l-3.8 1.9-.9 2.1V21H7V10l-.9-2.1L2.4 6l1.4-1.4A5 5 0 0 1 8 3l4 2 4-2z'/></svg></span>WHAT TO WEAR</div>
             <div class="advice" id="advice" aria-live="polite">—</div>
           </section>
-        </div>
 
+          <!-- LEFT: CAFE OF THE DAY -->
+          <section class="panel cafe">
+            <div class="kicker"><span id="cafeIcon" aria-hidden="true" class="icon"></span>CAFE OF THE DAY</div>
+            <div class="advice" id="cafe" aria-live="polite">—</div>
+          </section>
+        </div>
         <div class="rightCol">
           <!-- RIGHT: SEASON + SUNLIGHT + WIND -->
           <section class="panel season">
-            <div class="kicker">SEASON</div>
+            <div class="kicker"><span id="seasonIcon" aria-hidden="true" class="icon"></span>SEASON</div>
             <div class="advice" id="season" aria-live="polite">—</div>
           </section>
 
@@ -206,7 +237,14 @@
             <div class="wind" id="windMain" aria-live="polite">—</div>
             <div class="wind" id="windSub" aria-live="polite"><em>—</em></div>
           </section>
-        </div>
+
+          <!-- RIGHT: ART IN THE PARK -->
+          <section class="panel art">
+            <div class="kicker"><span id="artIcon" aria-hidden="true" class="icon"></span>ART IN THE PARK</div>
+            <div class="advice" id="art" aria-live="polite">—</div>
+          </section>
+
+          </div>
       </div>
 
       <div class="footer">built with data from open-meteo
@@ -235,38 +273,121 @@
   const $themeToggle = document.getElementById('themeToggle');
   const metaTheme = document.querySelector('meta[name="theme-color"]');
 
-  // Icons (SF‑style)
+  // --- Art data (static fallback) ---
+  // Source: https://en.wikipedia.org/wiki/Public_art_in_Central_Park (curated subset)
+  const ART_STATIC = [
+    { name: 'alice in wonderland', url: 'https://en.wikipedia.org/wiki/Alice_in_Wonderland_(Jose_de_Creeft)', where: 'east 74th' },
+    { name: 'balto', url: 'https://en.wikipedia.org/wiki/Balto_(Central_Park)', where: 'east 67th' },
+    { name: 'bethesda fountain', url: 'https://en.wikipedia.org/wiki/Bethesda_Terrace_and_Fountain', where: 'mid‑park 72nd' },
+    { name: 'cleopatra’s needle', url: 'https://en.wikipedia.org/wiki/Cleopatra%27s_Needle_(New_York_City)', where: 'east 81st' },
+    { name: 'hans christian andersen', url: 'https://en.wikipedia.org/wiki/Hans_Christian_Andersen_(sculpture)', where: 'east 74th' },
+    { name: 'literary walk statues', url: 'https://en.wikipedia.org/wiki/The_Mall_and_Literary_Walk', where: 'mid‑park 66th–72nd' },
+    { name: 'imagine mosaic', url: 'https://en.wikipedia.org/wiki/Strawberry_Fields_(memorial)', where: 'west 72nd' },
+    { name: 'william shakespeare', url: 'https://en.wikipedia.org/wiki/William_Shakespeare_(sculpture)', where: 'the mall' },
+    { name: 'the ramble cave', url: 'https://en.wikipedia.org/wiki/The_Ramble_and_Lake', where: 'the ramble' },
+    { name: 'the dairy', url: 'https://en.wikipedia.org/wiki/The_Dairy_in_Central_Park', where: 'mid‑park 65th' },
+    { name: 'bow bridge', url: 'https://en.wikipedia.org/wiki/Bow_Bridge_(Central_Park)', where: 'mid‑park 74th' },
+    { name: 'dakota lanterns', url: 'https://en.wikipedia.org/wiki/The_Dakota', where: 'west 72nd' }
+  ];
+
+  // ---- Cafe data (fallback) & helpers ----
+  // If you want live Google Places, set window.CAFES_ENDPOINT to a JSON URL you host
+  // that returns [{ name, rating, url }] for cafes near Central Park with rating >= 3.
+  // Putting a Google Places API key directly on a public site is insecure.
+  const CAFES_STATIC = [
+    { name: 'joe coffee company', rating: 4.4, url: 'https://maps.google.com/?q=Joe+Coffee+Company+Columbus+Avenue' },
+    { name: 'bluestone lane', rating: 4.3, url: 'https://maps.google.com/?q=Bluestone+Lane+2W+90th' },
+    { name: 'birch coffee', rating: 4.5, url: 'https://maps.google.com/?q=Birch+Coffee+Upper+West+Side' },
+    { name: 'ralph’s coffee', rating: 4.2, url: 'https://maps.google.com/?q=Ralphs+Coffee+Upper+East+Side' },
+    { name: 'irving farm', rating: 4.4, url: 'https://maps.google.com/?q=Irving+Farm+79th+St' },
+    { name: 'daily provisions', rating: 4.4, url: 'https://maps.google.com/?q=Daily+Provisions+UWS' },
+    { name: 'le pain quotidien', rating: 3.8, url: 'https://maps.google.com/?q=Le+Pain+Quotidien+Central+Park' },
+    { name: 'bluestone lane', rating: 4.3, url: 'https://maps.google.com/?q=Bluestone+Lane+Museum+Mile' },
+    { name: 'seven grams caffé', rating: 4.5, url: 'https://maps.google.com/?q=Seven+Grams+Caffe+82nd' },
+    { name: 'gregorys coffee', rating: 4.0, url: 'https://maps.google.com/?q=Gregorys+Coffee+Broadway+NYC' }
+  ];
+
+  function daySeed(date = new Date()){
+    const y = date.getFullYear();
+    const m = date.getMonth()+1; // 1..12
+    const d = date.getDate();
+    // simple stable hash: y*10000 + m*100 + d
+    return y*10000 + m*100 + d;
+  }
+  function pickDaily(list, date = new Date()){
+    const seed = daySeed(date);
+    const eligible = list.filter(c => (typeof c.rating === 'number' ? c.rating >= 3 : true));
+    if (!eligible.length) return null;
+    const idx = seed % eligible.length;
+    return eligible[idx];
+  }
+
+  // Icons (Linear‑style, selective fills where helpful)
   const SUN_MAX_SVG = `
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- sleek sun -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="4"/>
-      <line x1="12" y1="2" x2="12" y2="5"/>
-      <line x1="12" y1="19" x2="12" y2="22"/>
-      <line x1="2" y1="12" x2="5" y2="12"/>
-      <line x1="19" y1="12" x2="22" y2="12"/>
-      <line x1="4.6" y1="4.6" x2="6.8" y2="6.8"/>
-      <line x1="17.2" y1="17.2" x2="19.4" y2="19.4"/>
-      <line x1="4.6" y1="19.4" x2="6.8" y2="17.2"/>
-      <line x1="17.2" y1="6.8" x2="19.4" y2="4.6"/>
+      <line x1="12" y1="2" x2="12" y2="4"/>
+      <line x1="12" y1="20" x2="12" y2="22"/>
+      <line x1="2" y1="12" x2="4" y2="12"/>
+      <line x1="20" y1="12" x2="22" y2="12"/>
+      <line x1="4.6" y1="4.6" x2="6.1" y2="6.1"/>
+      <line x1="17.9" y1="17.9" x2="19.4" y2="19.4"/>
+      <line x1="4.6" y1="19.4" x2="6.1" y2="17.9"/>
+      <line x1="17.9" y1="6.1" x2="19.4" y2="4.6"/>
     </svg>`;
   const SUN_HORIZON_SVG = `
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- sleek sun on horizon -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 17h18"/>
       <path d="M7 17a5 5 0 0 1 10 0"/>
-      <line x1="12" y1="3" x2="12" y2="6"/>
-      <line x1="4.6" y1="7.4" x2="6.4" y2="9.2"/>
-      <line x1="19.4" y1="7.4" x2="17.6" y2="9.2"/>
+      <line x1="12" y1="3" x2="12" y2="5"/>
+      <line x1="5" y1="8" x2="6.5" y2="9.5"/>
+      <line x1="19" y1="8" x2="17.5" y2="9.5"/>
     </svg>`;
   const MOON_SVG = `
+    <!-- filled moon for night (selective fill) -->
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="none">
       <path d="M15.5 2.6A9 9 0 1 0 21.4 14 7 7 0 0 1 15.5 2.6Z"/>
     </svg>`;
   const WIND_SVG = `
-    <!-- pre–light/dark mode icon: 3 soft swoops -->
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 12h13a2 2 0 1 0-2-2"/>
-      <path d="M5 16h11a1.5 1.5 0 1 1-1.5 1.5"/>
-      <path d="M4 8h8a2 2 0 1 0-2-2"/>
+    <!-- sleek wind swooshes -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12h10c2 0 3-1 3-3s-1-3-3-3"/>
+      <path d="M3 16h8c1.6 0 2.5.9 2.5 2s-.9 2-2.5 2"/>
+      <path d="M3 8h9c2 0 3-1 3-3"/>
     </svg>`;
+  const NOW_SVG = `
+    <!-- sleek clock -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 7v5l3 2"/>
+    </svg>`;
+  const SEASON_SVG = `
+    <!-- solid leaf (selective fill) -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="none">
+      <path d="M20.5 3.5c-6.6 2.1-11 6.5-13.1 13.1-.5 1.6-.7 2.9-.8 3.8 0 .2.2.4.4.4.9-.1 2.2-.3 3.8-.8 6.6-2.1 11-6.5 13.1-13.1.1-.3 0-.6-.2-.8l-2.4-2.4c-.2-.2-.5-.3-.8-.2z"/>
+    </svg>`;
+  const CAFE_SVG = `
+    <!-- sleek to-go cup -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 3h16l-1 4H5L4 3z"/>
+      <path d="M5 7h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z"/>
+    </svg>`;
+  const THERMO_SVG = `
+    <!-- sleek thermometer -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+    </svg>`;
+  const ART_SVG = `
+    <!-- sleek statue/plinth icon -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="7" y="14" width="10" height="6" rx="1"/>
+      <path d="M10 14v-2a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/>
+      <circle cx="12" cy="7.5" r="2"/>
+    </svg>`;
+  
 
   // Theme toggle support (reuse sun/moon above)
   const SUN_TOGGLE_ICON = SUN_MAX_SVG;
@@ -406,7 +527,8 @@
       if ($temp) { $temp.textContent = `${roundedT}°F`; tick($temp); }
       if ($feelslike) {
         const feels = (typeof appTemp === 'number') ? Math.round(appTemp) : roundedT;
-        $feelslike.innerHTML = `<em>feels like ${feels}°F</em>`; tick($feelslike);
+        $feelslike.innerHTML = `<span class="feels"><span class="icon">${THERMO_SVG}</span><span>feels like ${feels}°F</span></span>`;
+        tick($feelslike);
       }
       if ($windMain) { $windMain.textContent = `${label}`; tick($windMain); }
       if ($windSub) { $windSub.innerHTML = `<em>${Math.round(ws)} mph${typeof wg === 'number' ? ` (gusts ${Math.round(wg)} mph)` : ''}</em>`; tick($windSub); }
@@ -417,6 +539,35 @@
       // Icons
       const windIconEl = document.getElementById('windIcon');
       if (windIconEl) windIconEl.innerHTML = WIND_SVG;
+      const seasonIconEl = document.getElementById('seasonIcon');
+      if (seasonIconEl) seasonIconEl.innerHTML = SEASON_SVG;
+      const cafeIconEl = document.getElementById('cafeIcon');
+      if (cafeIconEl) cafeIconEl.innerHTML = CAFE_SVG;
+      const artIconEl = document.getElementById('artIcon');
+      if (artIconEl) artIconEl.innerHTML = ART_SVG;
+
+      // Cafe of the day — live endpoint (optional) then fallback
+      try {
+        let cafes = null;
+        if (window.CAFES_ENDPOINT) {
+          const cr = await fetch(window.CAFES_ENDPOINT);
+          if (cr.ok) {
+            cafes = await cr.json();
+          }
+        }
+        const pool = Array.isArray(cafes) && cafes.length ? cafes : CAFES_STATIC;
+        const pick = pickDaily(pool);
+        const $cafe = document.getElementById('cafe');
+        if ($cafe && pick) {
+          const safeName = String(pick.name || 'cafe').toLowerCase();
+          const rating = typeof pick.rating === 'number' ? ` <span class="rating">★ ${pick.rating.toFixed(1)}</span>` : '';
+          const url = pick.url || `https://www.google.com/maps/search/${encodeURIComponent(safeName + ' near Central Park NYC')}`;
+          $cafe.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer">${safeName}</a>${rating}`;
+          tick($cafe);
+        }
+      } catch (e) {
+        console.warn('cafe load failed', e);
+      }
 
       if (sunrise && sunset) {
         const now = new Date();
@@ -434,7 +585,7 @@
         if (iconEl) iconEl.innerHTML = dark ? MOON_SVG : (golden ? SUN_HORIZON_SVG : SUN_HORIZON_SVG);
         if ($sunlight) { $sunlight.textContent = dark
           ? "it’s currently dark, you should bring a light"
-          : (golden ? "golden hour right now" : "it’s daylight right now"); tick($sunlight); }
+          : (golden ? (diffToSR <= GOLDEN_MIN ? "here comes the sun doo do doo do" : "golden hour right now") : "it’s daylight right now"); tick($sunlight); }
       } else {
         const iconEl = document.getElementById('sunIcon');
         if (iconEl) iconEl.innerHTML = SUN_HORIZON_SVG;
@@ -455,6 +606,22 @@
       setLoading(false);
     }
   }
+
+  // Pick art of the day (deterministic per day)
+  (function loadArt(){
+    try {
+      const $art = document.getElementById('art');
+      if (!$art) return;
+      const pool = ART_STATIC;
+      if (!Array.isArray(pool) || !pool.length) return;
+      const idx = (daySeed(new Date()) + 13) % pool.length; // offset so it differs from cafe
+      const item = pool[idx];
+      const text = item.name;
+      const href = item.url || `https://www.google.com/search?q=${encodeURIComponent(item.name + ' central park')}`;
+      $art.innerHTML = `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+      tick($art);
+    } catch (e) { console.warn('art load failed', e); }
+  })()
 
   if ($refresh) $refresh.addEventListener('click', load);
   if ($themeToggle) {
