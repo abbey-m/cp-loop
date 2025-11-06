@@ -53,7 +53,6 @@
         --chip-text: rgba(255,255,255,.85);
       }
     }
-    }
 
     html, body { height: 100%; }
 
@@ -219,6 +218,13 @@
             <div class="kicker"><span id="cafeIcon" aria-hidden="true" class="icon"></span>CAFE OF THE DAY</div>
             <div class="advice" id="cafe" aria-live="polite">—</div>
           </section>
+
+
+          <!-- LEFT: ART IN THE PARK (moved) -->
+          <section class="panel art">
+            <div class="kicker"><span id="artIcon" aria-hidden="true" class="icon"></span>ART IN THE PARK</div>
+            <div class="advice" id="art" aria-live="polite">—</div>
+          </section>
         </div>
         <div class="rightCol">
           <!-- RIGHT: SEASON + SUNLIGHT + WIND -->
@@ -232,16 +238,16 @@
             <div class="advice" id="sunlight" aria-live="polite">—</div>
           </section>
 
+          <!-- RIGHT: NEXT HOUR PRECIP -->
+          <section class="panel precip">
+            <div class="kicker"><span id="precipIcon" aria-hidden="true" class="icon"></span>NEXT HOUR</div>
+            <div class="advice" id="precip" aria-live="polite">—</div>
+          </section>
+
           <section class="panel windsec">
             <div class="kicker"><span id="windIcon" aria-hidden="true" class="icon"></span>WIND</div>
             <div class="wind" id="windMain" aria-live="polite">—</div>
             <div class="wind" id="windSub" aria-live="polite"><em>—</em></div>
-          </section>
-
-          <!-- RIGHT: ART IN THE PARK -->
-          <section class="panel art">
-            <div class="kicker"><span id="artIcon" aria-hidden="true" class="icon"></span>ART IN THE PARK</div>
-            <div class="advice" id="art" aria-live="polite">—</div>
           </section>
 
           </div>
@@ -258,7 +264,7 @@
   <script>
   // --- NYC bike wear helper (stable build) ---
   const NYC = { lat: 40.7128, lon: -74.0060 };
-  const API = `https://api.open-meteo.com/v1/forecast?latitude=${NYC.lat}&longitude=${NYC.lon}&current=temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m&daily=sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York`;
+  const API = `https://api.open-meteo.com/v1/forecast?latitude=${NYC.lat}&longitude=${NYC.lon}&current=temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m&hourly=precipitation,rain,snowfall,precipitation_probability,weather_code&daily=sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York`;
 
   // Grab elements once
   const $temp = document.getElementById('temp');
@@ -272,6 +278,7 @@
   const $sunlight = document.getElementById('sunlight');
   const $themeToggle = document.getElementById('themeToggle');
   const metaTheme = document.querySelector('meta[name="theme-color"]');
+  const $precip = document.getElementById('precip');
 
   // --- Art data (static fallback) ---
   // Source: https://en.wikipedia.org/wiki/Public_art_in_Central_Park (curated subset)
@@ -384,8 +391,25 @@
     <!-- sleek statue/plinth icon -->
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <rect x="7" y="14" width="10" height="6" rx="1"/>
-      <path d="M10 14v-2a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/>
+      <path d="M10 14v-2a 2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/>
       <circle cx="12" cy="7.5" r="2"/>
+    </svg>`;
+  const RAIN_SVG = `
+    <!-- sleek cloud rain -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 16a4 4 0 1 1 .5-7.9A5 5 0 0 1 20 10a4 4 0 0 1-1 8H7"/>
+      <path d="M8 20l1-2M12 20l1-2M16 20l1-2"/>
+    </svg>`;
+  const SNOW_SVG = `
+    <!-- sleek cloud snow -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 16a4 4 0 1 1 .5-7.9A5 5 0 0 1 20 10a4 4 0 0 1-1 8H7"/>
+      <path d="M9 20h0M12 20h0M15 20h0"/>
+    </svg>`;
+  const CLEAR_SVG = `
+    <!-- sleek clear (no precip) -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4"/>
     </svg>`;
   
 
@@ -497,6 +521,49 @@
   }
   function tick(el){ if(!el) return; el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); }
 
+  // Precip nowcast helper (shared)
+  function updatePrecipNowcast(now, htime, hrain, hsnow, hprec, hprob, hcode){
+    try {
+      if ($precip && Array.isArray(htime) && htime.length) {
+        const hourFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+        const idx = htime.findIndex(ts => new Date(ts) >= hourFloor);
+        const curIdx = idx === -1 ? 0 : idx;
+        const nextIdx = Math.min(curIdx + 1, htime.length - 1);
+
+        const curRain = (hrain[curIdx] ?? 0) + (hprec[curIdx] ?? 0);
+        const nextRain = (hrain[nextIdx] ?? 0) + (hprec[nextIdx] ?? 0);
+        const curSnow = (hsnow[curIdx] ?? 0);
+        const nextSnow = (hsnow[nextIdx] ?? 0);
+        const curProb = (hprob[curIdx] ?? 0);
+        const nextProb = (hprob[nextIdx] ?? 0);
+        const curCode = (hcode[curIdx] ?? 0);
+        const nextCode = (hcode[nextIdx] ?? 0);
+
+        const isSnowCode = c => [71,73,75,77,85,86].includes(Number(c));
+        const isRainCode = c => [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(Number(c));
+
+        const minutesToNextHour = 60 - now.getMinutes();
+        const minsStr = minutesToNextHour === 60 ? 'now' : `${minutesToNextHour} minute${minutesToNextHour===1?'':'s'}`;
+        const intensity = (mm) => mm >= 4 ? 'heavy ' : (mm >= 2 ? 'moderate ' : '');
+
+        let msg = '—';
+        let icon = CLEAR_SVG;
+
+        if (curSnow > 0 || isSnowCode(curCode)) { msg = 'snowing'; icon = SNOW_SVG; }
+        else if (curRain > 0 || isRainCode(curCode)) { msg = `${intensity(curRain)}raining`.trim(); icon = RAIN_SVG; }
+        else if (nextSnow > 0 || (isSnowCode(nextCode) && nextProb >= 30)) { msg = `snow expected in ${minsStr}`; icon = SNOW_SVG; }
+        else if (nextRain > 0 || (isRainCode(nextCode) && nextProb >= 30)) { msg = `${intensity(nextRain)}rain expected in ${minsStr}`.trim(); icon = RAIN_SVG; }
+        else if (nextProb >= 30) { msg = `${nextProb}% chance of ${isSnowCode(nextCode)?'snow':'rain'} in ${minsStr}`; icon = CLEAR_SVG; }
+        else { msg = 'nothing on the forecast'; icon = CLEAR_SVG; }
+
+        $precip.textContent = msg;
+        const precipIconEl2 = document.getElementById('precipIcon');
+        if (precipIconEl2) precipIconEl2.innerHTML = icon;
+        tick($precip);
+      }
+    } catch(e) { console.warn('precip nowcast failed', e); }
+  }
+
   async function load() {
     setLoading(true);
     try {
@@ -516,6 +583,12 @@
       const wg = data?.current?.wind_gusts_10m;
       const sunrise = data?.daily?.sunrise?.[0];
       const sunset  = data?.daily?.sunset?.[0];
+      const htime = data?.hourly?.time || [];
+      const hrain = data?.hourly?.rain || [];
+      const hsnow = data?.hourly?.snowfall || [];
+      const hprec = data?.hourly?.precipitation || [];
+      const hprob = data?.hourly?.precipitation_probability || [];
+      const hcode = data?.hourly?.weather_code || [];
 
       if (typeof t !== 'number' || typeof ws !== 'number') {
         throw new Error('Missing current weather fields');
@@ -545,6 +618,8 @@
       if (cafeIconEl) cafeIconEl.innerHTML = CAFE_SVG;
       const artIconEl = document.getElementById('artIcon');
       if (artIconEl) artIconEl.innerHTML = ART_SVG;
+      const precipIconEl = document.getElementById('precipIcon');
+      if (precipIconEl) precipIconEl.innerHTML = CLEAR_SVG;
 
       // Cafe of the day — live endpoint (optional) then fallback
       try {
@@ -590,7 +665,12 @@
         const iconEl = document.getElementById('sunIcon');
         if (iconEl) iconEl.innerHTML = SUN_HORIZON_SVG;
         if ($sunlight) { $sunlight.textContent = '—'; tick($sunlight); }
-      }
+            
+    }
+
+    // compute precip nowcast after sunlight logic
+    updatePrecipNowcast(new Date(), htime, hrain, hsnow, hprec, hprob, hcode);
+
     } catch (err) {
       console.error(err);
       if ($temp) $temp.textContent = '—';
